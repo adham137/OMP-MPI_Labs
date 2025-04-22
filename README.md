@@ -1,4 +1,3 @@
-```markdown
 # Parallel & Distributed Algorithms – Lab Solutions
 
 **Course:** Parallel & Distributed Algorithms  
@@ -87,6 +86,3 @@ This repository contains C implementations of the lab assignments for the “Par
    mpicc -fopenmp hybrid_sieve.cpp -o hybrid_sieve
    mpirun -np 4 ./hybrid_sieve N
    ```
-
-
-```
