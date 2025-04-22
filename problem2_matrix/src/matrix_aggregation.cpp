@@ -1,3 +1,4 @@
+// mpiexec -n 5 "./problem2_matrix/src/matrix_aggregation.exe"
 #include <iostream>
 #include <ctime>
 #include <cstddef>
@@ -17,11 +18,8 @@ void sequentialMatrixAggregation();                    // measure the time it ta
 void parallelMatrixAggregation(int, char**);           // measure the time it takes parallely
 
 int main(int argc, char* argv[]) {
-
-    sequentialMatrixAggregation();
+    // sequentialMatrixAggregation();
     parallelMatrixAggregation(argc, argv);
-
-
     return 0;
 }
 
@@ -35,7 +33,7 @@ void sequentialMatrixAggregation(){
     }
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);   
-    cout << "Sequentail execution Time: " << duration.count() << " microseconds" << endl;
+    cout << "Sequential execution Time: " << duration.count() << " microseconds" << endl;
 }
 void parallelMatrixAggregation(int argc, char* argv[]){
     auto start = chrono::high_resolution_clock::now();
@@ -108,6 +106,6 @@ void parallelMatrixAggregation(int argc, char* argv[]){
 
     auto stop = chrono::high_resolution_clock::now();
     auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);   
-    cout << "Parallel execution Time: " << duration.count() << " microseconds" << endl;
+    // cout << "Parallel execution Time: " << duration.count() << " microseconds" << endl;
     MPI_Finalize();
 }
