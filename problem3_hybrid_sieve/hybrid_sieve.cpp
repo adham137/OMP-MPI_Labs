@@ -10,16 +10,16 @@
 
 using namespace std;
 
-# define N 1000000000           // limit (inclusive)
+# define N 100000000           // limit (inclusive)
 # define n_proc 2       // number of tasks used in the parallel version (used when executing the file in cmd)
 
 void mark_composites_parallel(vector<char>& arr, const vector<long long> prime_nums, const long long start, const long long end);    // given a range and prime numbers,mark composite numbers with zeros parallely
 vector<char> sequential_sieve(long long n);                                   // given a range, mark composite numbers with zeros sequentially
 bool vectors_identical(const vector<char>& a, const vector<char>& b);   // check if two vectors are identical
 
-// run command: mpirun -np <N> ./hybrid_sieve.exe
+// run command: mpiexec -np <N> ./hybrid_sieve.exe
 int main(int argc, char* argv[]) {
-    auto start_p = chrono::high_resolution_clock::now();
+    
 
     vector<char> arr(N+1, true);
 
@@ -27,6 +27,9 @@ int main(int argc, char* argv[]) {
     int rank, num_tasks;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    std::chrono::_V2::system_clock::time_point start_p;
+    if(rank == 0) start_p = chrono::high_resolution_clock::now();
 
     // process zero will take 0 -> sqrt(N)
     // the rest of the array will be divided accross the rest of processes
@@ -90,12 +93,14 @@ int main(int argc, char* argv[]) {
         0,       
         MPI_COMM_WORLD
     );
-    auto stop_p = chrono::high_resolution_clock::now();
-    auto duration_p = chrono::duration_cast<std::chrono::microseconds>(stop_p - start_p);   
+ 
     
 
     // output all prime numbers from process 0
     if (rank == 0) {
+        auto stop_p = chrono::high_resolution_clock::now();
+        auto duration_p = chrono::duration_cast<std::chrono::microseconds>(stop_p - start_p);  
+        
         auto start_s = chrono::high_resolution_clock::now();
         vector<char> global_arr_sequential = sequential_sieve(N);
         auto stop_s = chrono::high_resolution_clock::now();
@@ -123,7 +128,7 @@ int main(int argc, char* argv[]) {
 
         cout << "Is parallel answer valid: " << (vectors_identical(global_arr, global_arr_sequential)? "Yes" : "No") << endl;
 
-        cout << "Speedup: " << duration_s.count() / duration_p.count() << endl;
+        cout << "Speedup: " << (float)(duration_s.count()*1.0 / duration_p.count()*1.0) << endl;
     }
     
 

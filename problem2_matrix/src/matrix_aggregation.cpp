@@ -9,41 +9,25 @@
 
 using namespace std;
 
-# define k 10        // sub-matrix size (k x k)
+# define k 500        // sub-matrix size (k x k)
 # define n_workers 5 // number of tasks used in the parallel version (used when executing the file in cmd)
 
 typedef struct { int rows, cols; int data[k*k]; } MatrixMeta;
 
-void sequentialMatrixAggregation();                    // measure the time it takes sequentially
-void parallelMatrixAggregation(int, char**);           // measure the time it takes parallely
+int sequentialMatrixAggregation();                    // measure the time it takes sequentially
+//void parallelMatrixAggregation(int, char**);           // measure the time it takes parallely
 
 int main(int argc, char* argv[]) {
     // sequentialMatrixAggregation();
-    parallelMatrixAggregation(argc, argv);
-    return 0;
-}
-
-void sequentialMatrixAggregation(){
-    auto start = chrono::high_resolution_clock::now();
-    vector<vector<int>> res (k*n_workers);
-    for(int i=0; i<k*n_workers; i++){
-        vector<int> temp(k*n_workers);
-        for(int j=0; j<k*n_workers; j++) temp[j] = rand()%100;
-        res.push_back(temp);
-    }
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);   
-    cout << "Sequential execution Time: " << duration.count() << " microseconds" << endl;
-}
-void parallelMatrixAggregation(int argc, char* argv[]){
-    auto start = chrono::high_resolution_clock::now();
-
-
     MPI_Init(&argc, &argv);
 
     int rank, num_tasks;
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
+
+    // init the timer for parallel
+    std::chrono::_V2::system_clock::time_point start_p;
+    if(rank == 0) start_p = chrono::high_resolution_clock::now();
 
     // each task generates a local sub-matrix of size k x k
     srand(time(0) + rank); // change the seed for each task to get different numbets
@@ -77,6 +61,9 @@ void parallelMatrixAggregation(int argc, char* argv[]){
     );
     // root task verifies results
     if (rank == 0) {
+        auto stop_p = chrono::high_resolution_clock::now();
+        auto duration_p = chrono::duration_cast<chrono::microseconds>(stop_p - start_p);   
+
         cout << "\n--- Root Process Verification ---" << endl;
         cout << "Received " << gatheredMatricies.size() << " matrices." << endl;
 
@@ -102,10 +89,28 @@ void parallelMatrixAggregation(int argc, char* argv[]){
         } else {
             cerr << "Verification FAILED!" << endl;
         }
-    }
+        
 
-    auto stop = chrono::high_resolution_clock::now();
-    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);   
+        int seq_dur = sequentialMatrixAggregation();
+        cout << "Parallel execution Time: " << duration_p.count() << " microseconds" << endl;
+        cout << "Sequential execution Time: " << seq_dur << " microseconds" << endl;
+
+        cout << "Speedup: " << seq_dur / duration_p.count() << endl;
+    }
     // cout << "Parallel execution Time: " << duration.count() << " microseconds" << endl;
     MPI_Finalize();
+    return 0;
+}
+
+int sequentialMatrixAggregation(){
+    auto start = chrono::high_resolution_clock::now();
+    vector<vector<int>> res (k*n_workers);
+    for(int i=0; i<k*n_workers; i++){
+        vector<int> temp(k*n_workers);
+        for(int j=0; j<k*n_workers; j++) temp[j] = rand()%100;
+        res.push_back(temp);
+    }
+    auto stop = chrono::high_resolution_clock::now();
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);   
+    return duration.count();
 }

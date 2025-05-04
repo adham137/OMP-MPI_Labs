@@ -77,7 +77,7 @@ This repository contains C implementations of the lab assignments for the “Par
    ```bash
    cd problem2_matrix/src
    mpicc matrix_aggregation.cpp -o matrix_agg
-   mpirun -np 4 ./matrix_agg
+   mpiexec -n 5 "./problem2_matrix/src/matrix_aggregation.exe"
    ```
 
 3. **Problem 3**  
